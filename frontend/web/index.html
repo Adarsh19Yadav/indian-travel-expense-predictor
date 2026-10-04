@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Indian Travel Expense Predictor</title>
+  <meta name="description" content="Predict your Indian trip expense with ML — powered by Gradient Boosting trained on 5,200 travel records." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="#home" class="navbar__brand" data-page="home">
+      <div class="navbar__brand-icon">✈️</div>
+      <span>TripCost<span style="color:var(--clr-accent)">AI</span></span>
+    </a>
+
+    <ul class="navbar__links" id="nav-links">
+      <li><a href="#home"      data-page="home">      <span class="nav-icon">🏠</span> Home</a></li>
+      <li><a href="#predict"   data-page="predict">   <span class="nav-icon">🔮</span> Predict</a></li>
+      <li><a href="#analytics" data-page="analytics"> <span class="nav-icon">📊</span> Analytics</a></li>
+      <li><a href="#insights"  data-page="insights">  <span class="nav-icon">🤖</span> Model Insights</a></li>
+    </ul>
+
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--clr-text-muted)">
+        <span class="result-panel__dot" id="backend-status-dot"></span>
+        <span id="backend-status-label">Checking API…</span>
+      </div>
+      <button class="navbar__mobile-toggle" aria-label="Menu">☰</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PAGE CONTENT
+═══════════════════════════════════════════════════════════ -->
+<div id="page-content">
+
+<!-- ─────────────────────────────────────────────────────────
+     HOME PAGE
+───────────────────────────────────────────────────────── -->
+<section id="page-home" class="page-section">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="container">
+      <div class="hero__grid">
+        <div>
+          <div class="hero__badge">🇮🇳 Machine Learning · Travel Finance</div>
+          <h1 class="hero__title">
+            Predict Your<br><span>Indian Trip</span><br>Expense Instantly
+          </h1>
+          <p class="hero__subtitle">
+            Enter your travel details and get an AI-powered expense estimate —
+            powered by a Gradient Boosting model trained on 5,200 real Indian
+            travel records with <strong style="color:var(--clr-accent)">96.2% accuracy</strong>.
+          </p>
+          <div class="hero__actions">
+            <a href="#predict" class="btn btn--primary btn--lg" data-page="predict">
+              🔮 Get Prediction
+            </a>
+            <a href="#analytics" class="btn btn--outline btn--lg" data-page="analytics">
+              📊 Explore Data
+            </a>
+          </div>
+        </div>
+
+        <div class="hero__stats">
+          <div class="hero__stat-card">
+            <div class="hero__stat-value orange">5,200</div>
+            <div class="hero__stat-label">Training Records</div>
+          </div>
+          <div class="hero__stat-card">
+            <div class="hero__stat-value blue">96.2%</div>
+            <div class="hero__stat-label">Model Accuracy (R²)</div>
+          </div>
+          <div class="hero__stat-card">
+            <div class="hero__stat-value green">57</div>
+            <div class="hero__stat-label">Indian Destinations</div>
+          </div>
+          <div class="hero__stat-card">
+            <div class="hero__stat-value violet">11.2%</div>
+            <div class="hero__stat-label">Mean Abs % Error</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="section section--sm" style="background:var(--clr-surface);border-bottom:1px solid var(--clr-border)">
+    <div class="container">
+      <div class="kpi-strip">
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--orange">📋</div>
+          <div>
+            <div class="kpi-value" id="kpi-records">5,200</div>
+            <div class="kpi-label">Total Trip Records</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--blue">💰</div>
+          <div>
+            <div class="kpi-value" id="kpi-avg">₹1,15,152</div>
+            <div class="kpi-label">Average Expense</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--green">📍</div>
+          <div>
+            <div class="kpi-value" id="kpi-dest">57</div>
+            <div class="kpi-label">Destinations</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--violet">📊</div>
+          <div>
+            <div class="kpi-value" id="kpi-median">₹90,978</div>
+            <div class="kpi-label">Median Expense</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature cards -->
+  <div class="section">
+    <div class="container">
+      <div class="section-heading">
+        <div class="section-heading__eyebrow">What you can do</div>
+        <h2 class="section-heading__title">Everything You Need to Plan Smarter</h2>
+        <p class="section-heading__sub">From instant expense predictions to deep dataset analytics — all in one place.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px">
+        <div class="card card--hover" style="cursor:pointer" data-page="predict" onclick="Router.navigate('predict')">
+          <div style="font-size:2rem;margin-bottom:14px">🔮</div>
+          <h3 style="margin-bottom:8px">Predict Expense</h3>
+          <p>Fill in destination, duration, accommodation, transport and more. Get an instant ML-powered prediction with a confidence range.</p>
+          <div style="margin-top:16px">
+            <span class="btn btn--primary btn--sm">Try Now →</span>
+          </div>
+        </div>
+
+        <div class="card card--hover" style="cursor:pointer" data-page="analytics" onclick="Router.navigate('analytics')">
+          <div style="font-size:2rem;margin-bottom:14px">📊</div>
+          <h3 style="margin-bottom:8px">Dataset Analytics</h3>
+          <p>Explore expense trends by destination, season, transport mode, and accommodation tier with interactive Chart.js visualisations.</p>
+          <div style="margin-top:16px">
+            <span class="btn btn--blue btn--sm">Explore →</span>
+          </div>
+        </div>
+
+        <div class="card card--hover" style="cursor:pointer" data-page="insights" onclick="Router.navigate('insights')">
+          <div style="font-size:2rem;margin-bottom:14px">🤖</div>
+          <h3 style="margin-bottom:8px">Model Insights</h3>
+          <p>Understand why the model works — compare all 4 trained algorithms, explore feature importances, and review the ML pipeline.</p>
+          <div style="margin-top:16px">
+            <span class="btn btn--outline btn--sm">See Insights →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="section" style="background:var(--clr-surface);border-top:1px solid var(--clr-border);border-bottom:1px solid var(--clr-border)">
+    <div class="container">
+      <div class="section-heading">
+        <div class="section-heading__eyebrow">Under the hood</div>
+        <h2 class="section-heading__title">How the Prediction Works</h2>
+      </div>
+      <div class="pipeline" style="max-width:600px;margin:0 auto">
+        <div class="pipeline__step">
+          <div>
+            <div class="pipeline__label">1. Input your trip parameters</div>
+            <div class="pipeline__desc">Destination, duration, travelers, accommodation tier, transport mode, season, meal plan.</div>
+          </div>
+        </div>
+        <div class="pipeline__step">
+          <div>
+            <div class="pipeline__label">2. Preprocessing pipeline</div>
+            <div class="pipeline__desc">StandardScaler on numerics · OrdinalEncoder on ranked categories · OneHotEncoder on nominal categories.</div>
+          </div>
+        </div>
+        <div class="pipeline__step">
+          <div>
+            <div class="pipeline__label">3. Gradient Boosting model</div>
+            <div class="pipeline__desc">400 sequential decision trees trained with learning_rate=0.05, max_depth=5, subsample=0.8.</div>
+          </div>
+        </div>
+        <div class="pipeline__step">
+          <div>
+            <div class="pipeline__label">4. Result with confidence bounds</div>
+            <div class="pipeline__desc">Predicted INR amount ± 11.2% MAPE-based confidence interval returned in &lt;100ms.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+
+<!-- ─────────────────────────────────────────────────────────
+     PREDICT PAGE
+───────────────────────────────────────────────────────── -->
+<section id="page-predict" class="page-section" style="display:none">
+  <div class="section">
+    <div class="container">
+      <div style="margin-bottom:32px">
+        <div class="section-heading__eyebrow">ML-Powered</div>
+        <h2>Trip Expense Predictor</h2>
+        <p style="margin-top:8px">Fill in your travel details to get an instant expense estimate.</p>
+      </div>
+
+      <div class="predict-layout">
+        <!-- LEFT: Form -->
+        <div class="predict-form-card">
+          <form id="predict-form">
+
+            <!-- Section: Destination -->
+            <div class="form-section">
+              <div class="form-section__title">
+                <span class="form-section__icon">📍</span> Destination
+              </div>
+              <div class="form-grid form-grid--2">
+                <div class="form-group">
+                  <label class="form-label" for="p-destination">City <span>*</span></label>
+                  <select class="form-control" id="p-destination">
+                    <!-- populated by JS -->
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="p-destination-type">Destination Type <span>*</span></label>
+                  <select class="form-control" id="p-destination-type">
+                    <option value="Heritage">Heritage</option>
+                    <option value="Religious">Religious</option>
+                    <option value="Mountain">Mountain</option>
+                    <option value="City">City</option>
+                    <option value="Nature">Nature</option>
+                    <option value="Beach" selected>Beach</option>
+                    <option value="Wildlife">Wildlife</option>
+                    <option value="Adventure">Adventure</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section: Trip Details -->
+            <div class="form-section">
+              <div class="form-section__title">
+                <span class="form-section__icon">🗓️</span> Trip Details
+              </div>
+              <div class="form-grid form-grid--2">
+                <div class="form-group">
+                  <label class="form-label">
+                    Travelers &nbsp;
+                    <span class="range-value" id="p-travelers-val">2</span>
+                  </label>
+                  <div class="range-wrap">
+                    <input type="range" id="p-travelers" min="1" max="20" value="2" />
+                    <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--clr-text-dim);margin-top:2px">
+                      <span>1</span><span>20</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">
+                    Trip Duration &nbsp;
+                    <span class="range-value" id="p-trip-days-val">5 days</span>
+                  </label>
+                  <div class="range-wrap">
+                    <input type="range" id="p-trip-days" min="1" max="30" value="5" />
+                    <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--clr-text-dim);margin-top:2px">
+                      <span>1 day</span><span>30 days</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">
+                    Activities &nbsp;
+                    <span class="range-value" id="p-activities-val">3</span>
+                  </label>
+                  <div class="range-wrap">
+                    <input type="range" id="p-activities" min="0" max="20" value="3" />
+                    <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--clr-text-dim);margin-top:2px">
+                      <span>0</span><span>20</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">
+                    Distance &nbsp;
+                    <span class="range-value" id="p-distance-val">1400 km</span>
+                  </label>
+                  <div class="range-wrap">
+                    <input type="range" id="p-distance" min="50" max="5000" step="50" value="1400" />
+                    <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--clr-text-dim);margin-top:2px">
+                      <span>50 km</span><span>5000 km</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section: Transport -->
+            <div class="form-section">
+              <div class="form-section__title">
+                <span class="form-section__icon">🚆</span> Transport Mode
+              </div>
+              <div class="chip-group">
+                <input type="radio" name="p-transport" id="tr-flight" value="Flight" checked />
+                <label for="tr-flight">✈️ Flight</label>
+                <input type="radio" name="p-transport" id="tr-train" value="Train" />
+                <label for="tr-train">🚂 Train</label>
+                <input type="radio" name="p-transport" id="tr-car" value="Car" />
+                <label for="tr-car">🚗 Car</label>
+                <input type="radio" name="p-transport" id="tr-bus" value="Bus" />
+                <label for="tr-bus">🚌 Bus</label>
+              </div>
+            </div>
+
+            <!-- Section: Accommodation & Meals -->
+            <div class="form-section">
+              <div class="form-section__title">
+                <span class="form-section__icon">🏨</span> Accommodation & Meals
+              </div>
+              <div class="form-grid form-grid--2">
+                <div class="form-group">
+                  <label class="form-label" for="p-accommodation">Accommodation <span>*</span></label>
+                  <select class="form-control" id="p-accommodation">
+                    <option value="Budget">Budget</option>
+                    <option value="2-Star">2-Star</option>
+                    <option value="3-Star" selected>3-Star</option>
+                    <option value="4-Star">4-Star</option>
+                    <option value="5-Star">5-Star</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="p-meal-plan">Meal Plan <span>*</span></label>
+                  <select class="form-control" id="p-meal-plan">
+                    <option value="Room Only">Room Only</option>
+                    <option value="Breakfast" selected>Breakfast</option>
+                    <option value="Half Board">Half Board</option>
+                    <option value="Full Board">Full Board</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section: Season & Booking -->
+            <div class="form-section">
+              <div class="form-section__title">
+                <span class="form-section__icon">🌦️</span> Season & Booking
+              </div>
+              <div class="chip-group" style="margin-bottom:18px">
+                <input type="radio" name="p-season" id="s-offpeak"  value="Off-Peak" />
+                <label for="s-offpeak">❄️ Off-Peak</label>
+                <input type="radio" name="p-season" id="s-shoulder" value="Shoulder" />
+                <label for="s-shoulder">🌤️ Shoulder</label>
+                <input type="radio" name="p-season" id="s-peak"     value="Peak" checked />
+                <label for="s-peak">☀️ Peak</label>
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  Booked in Advance &nbsp;
+                  <span class="range-value" id="p-advance-days-val">30 days</span>
+                </label>
+                <div class="range-wrap">
+                  <input type="range" id="p-advance-days" min="0" max="365" value="30" />
+                  <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--clr-text-dim);margin-top:2px">
+                    <span>Same day</span><span>1 year ahead</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--lg" id="predict-btn" style="width:100%;justify-content:center">
+              <span>🔮</span> Predict Expense
+            </button>
+          </form>
+        </div>
+
+        <!-- RIGHT: Result panel -->
+        <div class="result-panel">
+          <div class="result-panel__header">
+            <div class="result-panel__dot result-panel__dot--live" id="result-live-dot"></div>
+            <span style="font-size:.85rem;font-weight:600">Prediction Result</span>
+          </div>
+          <div class="result-panel__body" id="result-body">
+            <div class="result-empty">
+              <div class="result-empty__icon">🔮</div>
+              <div style="font-weight:600;color:var(--clr-text);margin-bottom:6px">Ready to predict</div>
+              <div>Fill in your trip details and click <strong>Predict Expense</strong> to see your estimate.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ─────────────────────────────────────────────────────────
+     ANALYTICS PAGE
+───────────────────────────────────────────────────────── -->
+<section id="page-analytics" class="page-section" style="display:none">
+  <div class="section">
+    <div class="container">
+      <div style="margin-bottom:32px">
+        <div class="section-heading__eyebrow">Dataset Exploration</div>
+        <h2>Travel Expense Analytics</h2>
+        <p style="margin-top:8px">Interactive charts across 5,200 Indian travel records.</p>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tab-dest">🗺️ Destinations</button>
+        <button class="tab-btn" data-tab="tab-season">🌦️ Season</button>
+        <button class="tab-btn" data-tab="tab-transport">🚆 Transport</button>
+        <button class="tab-btn" data-tab="tab-acc">🏨 Accommodation</button>
+        <button class="tab-btn" data-tab="tab-dist">📈 Distributions</button>
+      </div>
+
+      <!-- Tab: Destinations -->
+      <div class="tab-panel active" id="tab-dest">
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Top 20 Destinations by Avg Expense</div>
+            <div style="height:480px"><canvas id="chart-dest-bar"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Avg Expense by Destination Type</div>
+            <div style="height:480px"><canvas id="chart-dest-type"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Season -->
+      <div class="tab-panel" id="tab-season">
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Average Expense by Travel Season</div>
+            <div style="height:380px"><canvas id="chart-season-bar"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Trip Count by Season</div>
+            <div style="height:380px"><canvas id="chart-season-pie"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Transport -->
+      <div class="tab-panel" id="tab-transport">
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Average Expense by Transport Mode</div>
+            <div style="height:380px"><canvas id="chart-transport-bar"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Trip Count by Transport Mode</div>
+            <div style="height:380px"><canvas id="chart-transport-pie"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Accommodation -->
+      <div class="tab-panel" id="tab-acc">
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Average Expense by Accommodation Tier</div>
+            <div style="height:380px"><canvas id="chart-acc-bar"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Expense Trend — Budget to 5-Star</div>
+            <div style="height:380px"><canvas id="chart-acc-line"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Distributions -->
+      <div class="tab-panel" id="tab-dist">
+        <div class="chart-card">
+          <div class="chart-card__title"><span class="dot"></span>Expense Distribution (Histogram)</div>
+          <div style="height:340px"><canvas id="chart-histogram"></canvas></div>
+        </div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Avg Expense by Number of Travelers</div>
+            <div style="height:300px"><canvas id="chart-travelers"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Avg Expense by Trip Duration</div>
+            <div style="height:300px"><canvas id="chart-trip-days"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ─────────────────────────────────────────────────────────
+     INSIGHTS PAGE
+───────────────────────────────────────────────────────── -->
+<section id="page-insights" class="page-section" style="display:none">
+  <div class="section">
+    <div class="container">
+      <div style="margin-bottom:32px">
+        <div class="section-heading__eyebrow">Machine Learning</div>
+        <h2>Model Insights</h2>
+        <p style="margin-top:8px">Performance metrics, feature importances, and pipeline architecture.</p>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tab-metrics">📊 Model Comparison</button>
+        <button class="tab-btn" data-tab="tab-fi">🔍 Feature Importances</button>
+        <button class="tab-btn" data-tab="tab-pipeline">⚙️ Pipeline</button>
+      </div>
+
+      <!-- Tab: Metrics -->
+      <div class="tab-panel active" id="tab-metrics">
+        <!-- Best model KPI strip -->
+        <div class="kpi-strip" style="margin-bottom:28px">
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-icon--orange">🏆</div>
+            <div>
+              <div class="kpi-value">0.9622</div>
+              <div class="kpi-label">Test R² Score</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-icon--blue">📉</div>
+            <div>
+              <div class="kpi-value">₹11,177</div>
+              <div class="kpi-label">Mean Abs Error</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-icon--green">📐</div>
+            <div>
+              <div class="kpi-value">₹16,023</div>
+              <div class="kpi-label">RMSE</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-icon--violet">🎯</div>
+            <div>
+              <div class="kpi-value">11.21%</div>
+              <div class="kpi-label">MAPE</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Model comparison table -->
+        <div class="chart-card" style="margin-bottom:28px;overflow-x:auto">
+          <div class="chart-card__title"><span class="dot"></span>All Models — Evaluation Results</div>
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Model</th><th>CV R² (mean ± std)</th><th>Test R²</th>
+                <th>MAE (INR)</th><th>RMSE (INR)</th><th>MAPE</th>
+              </tr>
+            </thead>
+            <tbody id="metrics-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--clr-text-muted);padding:24px">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>CV R² vs Test R²</div>
+            <div style="height:320px"><canvas id="chart-model-r2"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>MAE vs RMSE</div>
+            <div style="height:320px"><canvas id="chart-model-error"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Feature Importances -->
+      <div class="tab-panel" id="tab-fi">
+        <div class="insights-grid">
+          <div class="chart-card" style="grid-column: span 2">
+            <div class="chart-card__title"><span class="dot"></span>Top 15 Feature Importances — Gradient Boosting</div>
+            <div style="height:420px"><canvas id="chart-fi"></canvas></div>
+          </div>
+        </div>
+        <div class="chart-card" style="overflow-x:auto">
+          <div class="chart-card__title"><span class="dot"></span>Ranked Feature Table</div>
+          <table class="model-table">
+            <thead>
+              <tr><th>#</th><th>Feature</th><th>Group</th><th>Importance</th><th>Relative</th></tr>
+            </thead>
+            <tbody id="fi-tbody">
+              <tr><td colspan="5" style="text-align:center;color:var(--clr-text-muted);padding:24px">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab: Pipeline -->
+      <div class="tab-panel" id="tab-pipeline">
+        <div class="insights-grid">
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Preprocessing Pipeline</div>
+            <div class="pipeline">
+              <div class="pipeline__step">
+                <div>
+                  <div class="pipeline__label">StandardScaler</div>
+                  <div class="pipeline__desc">Applied to: travelers, trip_days, activities_count, booking_advance_days, distance_km</div>
+                </div>
+              </div>
+              <div class="pipeline__step">
+                <div>
+                  <div class="pipeline__label">OrdinalEncoder</div>
+                  <div class="pipeline__desc">
+                    accommodation_type → [Budget, 2-Star, 3-Star, 4-Star, 5-Star]<br>
+                    travel_season → [Off-Peak, Shoulder, Peak]<br>
+                    meal_plan → [Room Only, Breakfast, Half Board, Full Board]
+                  </div>
+                </div>
+              </div>
+              <div class="pipeline__step">
+                <div>
+                  <div class="pipeline__label">OneHotEncoder</div>
+                  <div class="pipeline__desc">Applied to: destination (57 values), destination_type (8 values), transport_mode (4 values)</div>
+                </div>
+              </div>
+              <div class="pipeline__step">
+                <div>
+                  <div class="pipeline__label">GradientBoostingRegressor</div>
+                  <div class="pipeline__desc">Best model — selected from 4 evaluated algorithms</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card__title"><span class="dot"></span>Model Hyperparameters</div>
+            <table class="model-table">
+              <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>n_estimators</td><td style="font-family:var(--font-mono);color:var(--clr-accent)">400</td></tr>
+                <tr><td>learning_rate</td><td style="font-family:var(--font-mono);color:var(--clr-accent)">0.05</td></tr>
+                <tr><td>max_depth</td><td style="font-family:var(--font-mono);color:var(--clr-accent)">5</td></tr>
+                <tr><td>subsample</td><td style="font-family:var(--font-mono);color:var(--clr-accent)">0.8</td></tr>
+                <tr><td>min_samples_leaf</td><td style="font-family:var(--font-mono);color:var(--clr-accent)">3</td></tr>
+                <tr><td>random_state</td><td style="font-family:var(--font-mono);color:var(--clr-accent)">42</td></tr>
+                <tr><td>Train / Test split</td><td style="font-family:var(--font-mono);color:var(--clr-accent2)">80% / 20%</td></tr>
+                <tr><td>Cross-validation</td><td style="font-family:var(--font-mono);color:var(--clr-accent2)">5-fold KFold</td></tr>
+              </tbody>
+            </table>
+
+            <div style="margin-top:20px">
+              <div class="chart-card__title" style="margin-bottom:12px"><span class="dot"></span>Why Gradient Boosting Won</div>
+              <ul style="display:flex;flex-direction:column;gap:8px;list-style:none">
+                <li style="font-size:.85rem;color:var(--clr-text-muted);display:flex;gap:8px"><span style="color:var(--clr-accent3)">✓</span>Highest Test R² at 0.9622 — best variance explained</li>
+                <li style="font-size:.85rem;color:var(--clr-text-muted);display:flex;gap:8px"><span style="color:var(--clr-accent3)">✓</span>Lowest MAPE at 11.21% — most accurate %  predictions</li>
+                <li style="font-size:.85rem;color:var(--clr-text-muted);display:flex;gap:8px"><span style="color:var(--clr-accent3)">✓</span>Lowest CV std (0.0023) — most stable across folds</li>
+                <li style="font-size:.85rem;color:var(--clr-text-muted);display:flex;gap:8px"><span style="color:var(--clr-accent3)">✓</span>Sequential boosting corrects residual errors tree-by-tree</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+</div><!-- /#page-content -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <span>✈️</span> TripCostAI
+        <span style="font-weight:400;color:var(--clr-text-muted);margin-left:8px">· Indian Travel Expense Predictor</span>
+      </div>
+      <div class="footer__links">
+        <a href="#home" data-page="home">Home</a>
+        <a href="#predict" data-page="predict">Predict</a>
+        <a href="#analytics" data-page="analytics">Analytics</a>
+        <a href="#insights" data-page="insights">Insights</a>
+      </div>
+      <div style="color:var(--clr-text-dim);font-size:.78rem">
+        Gradient Boosting · R² 0.9622 · 5,200 records
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ── Scripts ─────────────────────────────────────────────── -->
+<script src="/static/js/api.js"></script>
+<script src="/static/js/predict.js"></script>
+<script src="/static/js/analytics.js"></script>
+<script src="/static/js/insights.js"></script>
+<script src="/static/js/app.js"></script>
+
+</body>
+</html>

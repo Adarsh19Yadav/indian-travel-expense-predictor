@@ -1,0 +1,60 @@
+{
+  "best_model": "Gradient Boosting",
+  "test_r2": 0.962201,
+  "test_mae": 11176.73,
+  "test_rmse": 16022.56,
+  "test_mape": 11.208,
+  "features": {
+    "numerical": [
+      "travelers",
+      "trip_days",
+      "activities_count",
+      "booking_advance_days",
+      "distance_km"
+    ],
+    "ordinal": [
+      "accommodation_type",
+      "travel_season",
+      "meal_plan"
+    ],
+    "nominal": [
+      "destination",
+      "destination_type",
+      "transport_mode"
+    ]
+  },
+  "all_results": {
+    "Ridge Regression": {
+      "cv_r2_mean": 0.835716,
+      "cv_r2_std": 0.004277,
+      "test_r2": 0.827617,
+      "mae": 26492.55,
+      "rmse": 34216.8,
+      "mape": 39.7934
+    },
+    "Random Forest": {
+      "cv_r2_mean": 0.93145,
+      "cv_r2_std": 0.007016,
+      "test_r2": 0.934734,
+      "mae": 14437.13,
+      "rmse": 21054.07,
+      "mape": 15.3653
+    },
+    "Gradient Boosting": {
+      "cv_r2_mean": 0.960771,
+      "cv_r2_std": 0.002346,
+      "test_r2": 0.962201,
+      "mae": 11176.73,
+      "rmse": 16022.56,
+      "mape": 11.208
+    },
+    "XGBoost": {
+      "cv_r2_mean": 0.960458,
+      "cv_r2_std": 0.001579,
+      "test_r2": 0.960569,
+      "mae": 11154.39,
+      "rmse": 16364.84,
+      "mape": 11.2716
+    }
+  }
+}
